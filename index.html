@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-do-list App</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700,800|plus-jakarta-sans:300,500,600,700,800|poppins:100,200,300,400,500" rel="stylesheet" />
+
+    <script src="app.js" defer></script>
+</head>
+<body>
+    <div class="app-container">
+        <div class="left-sidebar">
+            <div class="logo">
+                <img src="" alt="" srcset="">
+            </div>
+
+            <div class="search-bar">
+                <img src="/icon/search-icon.svg" alt="search-icon" srcset="">
+                <input type="text" placeholder="Search">
+            </div>
+
+            <div class="folder-section">
+                <h3>Folders</h3>
+                
+                <div class="folder-items">
+                    <div class="folder" data-folder="my-day">
+                        <img src="" alt="day Icon">
+                        <p>My day</p>
+                        <div class="folder-number">0</div>
+                    </div>
+
+                    <div class="folder" data-folder="important">
+                        <img src="" alt="Important Icon">
+                        <p>Important</p>
+                        <div class="folder-number">0</div>
+                    </div>
+
+                    <div class="folder" data-folder="personal">
+                        <img src="" alt="Personal Icon">
+                        <p>Personal</p>
+                        <div class="folder-number">0</div>
+                    </div>
+
+                    <div class="folder" data-folder="all">
+                        <img src="" alt="All Icon">
+                        <p>All</p>
+                        <div class="folder-number">0</div>
+                    </div>
+
+                    <div class="folder" data-folder="completed">
+                        <img src="" alt="Completed Icon">
+                        <p>Completed</p>
+                        <div class="folder-number">0</div>
+                    </div>
+
+                    <div class="line-br"></div>
+
+                    <div class="tag-section">
+                        <h3>Your own tags</h3>
+
+                        <div class="tag-items">
+                            <div class="tag">
+                                <img src="" alt="GoPay">
+                                <p>GoPay</p>
+                                <div class="folder-number">1</div>
+                            </div>
+
+                            <div class="tag">
+                                <img src="" alt="Kretya Studio">
+                                <p>Kretya Studio</p>
+                                <div class="folder-number">1</div>
+                            </div>
+
+                            <div class="tag">
+                                <img src="" alt="Content Dump">
+                                <p>Content Dump</p>
+                                <div class="folder-number">1</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="content">
+            <div class="header">
+                <div class="folder-nav">
+                    <h3>My Day</h3>
+                    <p>February 2025</p>
+                </div>
+
+                <button class="new-task">
+                    <p>New Task</p>
+                </button>
+            </div>
+
+            <div class="to-do-items">
+                <div class="item">
+                    <input type="checkbox" name="banner" id="banner">
+                    <div class="item-folder">
+                        <p>Promotional Banner</p>
+                        <p>Personal <span>Today</span> </p>
+                    </div>
+                    <div class="starred">star</div>
+                </div>
+
+                <div class="item">
+                    <input type="checkbox" name="workout" id="workout">
+                    <div class="item-folder">
+                        <p>Daily workout</p>
+                        <p>Personal <span>Today</span> </p>
+                    </div>
+                    <div class="starred">star</div>
+                </div>
+
+                <div class="item">
+                    <input type="checkbox" name="dribbleShot" id="dribbleShot">
+                    <div class="item-folder">
+                        <p>Make Dribble Shot</p>
+                        <p>Personal <span>Today</span> </p>
+                    </div>
+                    <div class="starred">star</div>
+                </div>
+
+                <div class="item">
+                    <input type="checkbox" name="AnnouncementDesign" id="AnnouncementDesign">
+                    <div class="item-folder">
+                        <p>Announcement of Design Challenge</p>
+                        <p>Personal <span>Wednesday, Dec 28</span> </p>
+                    </div>
+                    <div class="starred">star</div>
+                </div>
+
+                <div class="item">
+                    <input type="checkbox" name="led strips" id="buyLed">
+                    <div class="item-folder">
+                        <p>Buy LED Strips</p>
+                        <p>Personal <span>Wednesday, Dec 28</span> </p>
+                    </div>
+                    <div class="starred">star</div>
+                </div>
+
+                <div class="item">
+                    <input type="checkbox" name="promo" id="promo">
+                    <div class="item-folder">
+                        <p>Pull to refresh at promo discovery</p>
+                        <p>Content Dump <span>Friday, Dec 30</span> </p>
+                    </div>
+                    <div class="starred">star</div>
+                </div>
+
+                <div class="item">
+                    <input type="checkbox" name="edit video" id="editVideo">
+                    <div class="item-folder">
+                        <p>Edit video for social media</p>
+                        <p>Personal <span>Frida, Dec 30</span> </p>
+                    </div>
+                    <div class="starred">star</div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="right-sidebar">
+            <div class="profile">
+                <img class="profile-img" alt="profile-img">
+                <div class="profile-name">
+                    <h3>Maryann Michael</h3>
+                    <p>Maryann@gmail.com</p>
+                </div>
+
+                <div class="settings-alarm">
+                    <img src="" alt="alarm icon">
+                    <img src="" alt="settings icon">
+                </div>
+            </div>
+
+            <div class="calendar-container">
+                <div class="calendar-controls">
+                    <h1 id="month-year"></h1>
+                    <div class="buttonContainer">
+                        <button id="prev-month"><img src="/icon/back-arrow-icon.svg" alt=""></button>
+                        <button id="next-month"><img src="/icon/right-arrow-icon.svg" alt=""></button>
+                    </div>
+                </div>
+                <table id="calendar">
+                    <thead>
+                        <tr>
+                            <th>SUN</th>
+                            <th>MON</th>
+                            <th>TUE</th>
+                            <th>WED</th>
+                            <th>THU</th>
+                            <th>FRI</th>
+                            <th>SAT</th>
+                        </tr>
+                    </thead>
+                    <tbody id="calendar-body">
+                        <!-- calendar body goes here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="task-section">
+                <h3>Completed task</h3>
+
+                <div class="completed-tasks-items">
+                    <div class="tasks">
+                        <input type="checkbox" name="office" id="office">
+                        <div class="task-folder">
+                            <p>Cleaning office room</p>
+                            <p>Personal <span>Today</span> </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="task-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Add a New Task</h2>
+            <form id="task-form">
+                <div class="form-group">
+                    <label for="task-title">Title</label>
+                    <input type="text" id="task-title" placeholder="Enter task title" required>
+                </div>
+                <div class="form-group">
+                    <label for="task-description">Description</label>
+                    <textarea id="task-description" placeholder="Enter task description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="task-category">Category</label>
+                    <select id="task-category">
+                        <option value="Personal">Personal</option>
+                        <option value="Work">Work</option>
+                        <option value="Study">Study</option>
+                        <option value="custom">Create New Tag</option>
+                    </select>
+                    <input type="text" id="custom-tag-input" placeholder="Enter new tag name" style="display: none;">
+                </div>
+                <button type="submit">Add Task</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Task Details Modal -->
+    <div id="task-details-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 id="task-details-title"></h2>
+            <p id="task-details-description"></p>
+            <p id="task-details-category"></p>
+            <p id="task-details-date"></p>
+            <div class="task-actions">
+                <button id="edit-task-btn">Edit</button>
+                <button id="delete-task-btn">Delete</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
