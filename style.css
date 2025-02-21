@@ -486,3 +486,6 @@ td.today {
 .completed-tasks-items .item input[type="checkbox"] {
   cursor: not-allowed; /* Disable checkbox interaction */
 }
+
+
+

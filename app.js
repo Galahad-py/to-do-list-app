@@ -1,168 +1,199 @@
 const Calendar = (() => {
     // Private variables
     let currentDate = new Date();
+    let currentMonth = currentDate.getMonth();
+    let currentYear = currentDate.getFullYear();
     let selectedDate = null;
-
+  
     // DOM elements
-    const monthYear = document.getElementById("month-year");
-    const calendarBody = document.getElementById("calendar-body");
-    const prevMonthButton = document.getElementById("prev-month");
-    const nextMonthButton = document.getElementById("next-month");
-    const toDoItems = document.querySelector(".to-do-items");
-
-    // Factory function to create a calendar cell
-    const createCell = (content, className = "") => {
-        const cell = document.createElement("td");
-        cell.textContent = content;
-        if (className) cell.classList.add(className);
-        return cell;
-    };
-
-    // Render the calendar
-    const renderCalendar = () => {
-        // Clear the calendar body
-        calendarBody.innerHTML = "";
-
-        // Set the month and year in the header
-        const month = currentDate.toLocaleString("default", { month: "long" });
-        const year = currentDate.getFullYear();
-        monthYear.textContent = `${month} ${year}`;
-
-        // Get the first day of the month and the number of days in the month
-        const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-        const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-        const startDay = firstDay.getDay(); // Day of the week (0 = Sunday, 6 = Saturday)
-        const totalDays = lastDay.getDate();
-
-        let day = 1;
-
-        // Create calendar rows
-        for (let i = 0; i < 6; i++) {
-            const row = document.createElement("tr");
-
-            for (let j = 0; j < 7; j++) {
-                if (i === 0 && j < startDay) {
-                    // Empty cells before the first day of the month
-                    row.appendChild(createCell("", "empty"));
-                } else if (day > totalDays) {
-                    // Empty cells after the last day of the month
-                    row.appendChild(createCell("", "empty"));
-                } else {
-                    // Add the day number
-                    const cell = createCell(day);
-
-                    // Highlight today's date
-                    if (
-                        day === new Date().getDate() &&
-                        currentDate.getMonth() === new Date().getMonth() &&
-                        currentDate.getFullYear() === new Date().getFullYear()
-                    ) {
-                        cell.classList.add("today");
-                    }
-
-                    // Highlight selected date
-                    if (
-                        selectedDate &&
-                        day === selectedDate.getDate() &&
-                        currentDate.getMonth() === selectedDate.getMonth() &&
-                        currentDate.getFullYear() === selectedDate.getFullYear()
-                    ) {
-                        cell.classList.add("selected");
-                    }
-
-                    // Add event listener to the cell
-                    cell.addEventListener("click", () => {
-                        console.log(`Date clicked: ${day}`); // Debugging: Log the clicked date
-                        handleDateClick(day);
-                    });
-
-                    row.appendChild(cell);
-                    day++; // Increment day only when a valid day is added
-                }
+    const monthYearElement = document.getElementById('month-year');
+    const calendarBody = document.getElementById('calendar-body');
+    const prevMonthButton = document.getElementById('prev-month');
+    const nextMonthButton = document.getElementById('next-month');
+    const toDoItems = document.querySelector('.to-do-items'); // Use existing .to-do-items container
+  
+    // Load tasks from localStorage
+    let tasks = JSON.parse(localStorage.getItem('tasks')) || {};
+  
+    // Debugging: Log initial state
+    console.log('Initial tasks:', tasks);
+    console.log('Current date:', currentDate);
+    console.log('Current month:', currentMonth);
+    console.log('Current year:', currentYear);
+  
+    // Function to render the calendar
+    const renderCalendar = (month, year) => {
+      console.log(`Rendering calendar for ${month + 1}/${year}`);
+      calendarBody.innerHTML = '';
+      const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+      monthYearElement.textContent = `${monthNames[month]} ${year}`;
+  
+      const firstDay = new Date(year, month, 1);
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const startingDay = firstDay.getDay();
+  
+      console.log(`Days in month: ${daysInMonth}, Starting day: ${startingDay}`);
+  
+      let date = 1;
+      for (let i = 0; i < 6; i++) {
+        const row = document.createElement('tr');
+        for (let j = 0; j < 7; j++) {
+          const cell = document.createElement('td');
+          if (i === 0 && j < startingDay) {
+            cell.textContent = '';
+          } else if (date > daysInMonth) {
+            cell.textContent = '';
+          } else {
+            cell.textContent = date;
+            const cellDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+            if (tasks[cellDate]) {
+              cell.classList.add('has-tasks');
+              console.log(`Date ${cellDate} has tasks`);
             }
-
-            calendarBody.appendChild(row);
-
-            // Stop creating rows if all days are rendered
-            if (day > totalDays) break;
+            if (
+              date === currentDate.getDate() &&
+              month === currentDate.getMonth() &&
+              year === currentDate.getFullYear()
+            ) {
+              cell.classList.add('today');
+              console.log(`Today's date: ${cellDate}`);
+            }
+            cell.addEventListener('click', () => selectDate(cellDate));
+            date++;
+          }
+          row.appendChild(cell);
         }
+        calendarBody.appendChild(row);
+        if (date > daysInMonth) {
+          break;
+        }
+      }
     };
-
-    // Handle date click
-    const handleDateClick = (day) => {
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth();
-        selectedDate = new Date(year, month, day);
-
-        console.log(`Selected Date: ${selectedDate}`); // Debugging: Log the selected date
-        renderTasksByDate(selectedDate);
-        renderCalendar(); // Re-render the calendar to update the selected date highlight
+  
+    // Function to select a date
+    const selectDate = (date) => {
+      console.log(`Date selected: ${date}`);
+      selectedDate = date;
+      displayTasks(date);
     };
-
-    // Render tasks for the selected date
-    const renderTasksByDate = (date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const day = String(date.getDate()).padStart(2, "0");
-        const formattedDate = `${year}-${month}-${day}`;
-
-        console.log(`Filtering tasks for date: ${formattedDate}`); // Debugging: Log the formatted date
-
-        // Example tasks (replace with your actual task list)
-        const tasks = [
-            { title: "Task 1", dateAdded: "2025-02-15" },
-            { title: "Task 2", dateAdded: "2025-02-28" },
-        ];
-
-        const filteredTasks = tasks.filter(task => {
-            const taskDate = new Date(task.dateAdded).toISOString().split("T")[0];
-            return taskDate === formattedDate;
+  
+    // Function to display tasks for a selected date
+    const displayTasks = (date) => {
+      console.log(`Displaying tasks for date: ${date}`);
+      toDoItems.innerHTML = ''; // Clear the task list
+  
+      if (tasks[date]) {
+        console.log(`Tasks found for ${date}:`, tasks[date]);
+        tasks[date].forEach((task, index) => {
+          const taskItem = document.createElement('div');
+          taskItem.classList.add('item');
+  
+          taskItem.innerHTML = `
+            <input type="checkbox" name="task" id="task-${index}">
+            <div class="item-folder">
+              <p>${task}</p>
+              <p>Personal <span>${date}</span></p>
+            </div>
+            <div class="starred">star</div>
+          `;
+  
+          toDoItems.appendChild(taskItem);
         });
-        console.log(`Filtered Tasks:`, filteredTasks); // Debugging: Log the filtered tasks
-
-        // Render tasks in the .to-do-items container
-        toDoItems.innerHTML = ""; // Clear the task list
-        filteredTasks.forEach(task => {
-            const taskItem = document.createElement("div");
-            taskItem.classList.add("item");
-
-            taskItem.innerHTML = `
-                <input type="checkbox" name="task" id="task-${task.title}">
-                <div class="item-folder">
-                    <p>${task.title}</p>
-                    <p>Personal <span>${formattedDate}</span></p>
-                </div>
-                <div class="starred">star</div>
-            `;
-
-            toDoItems.appendChild(taskItem);
-        });
+      } else {
+        console.log(`No tasks found for ${date}`);
+        // Display "No tasks found" message
+        toDoItems.innerHTML = `<div class="no-results">No tasks found</div>`;
+      }
     };
+  
+    // Function to add a task
+    // const addTask = (taskText) => {
+    //   if (taskText && selectedDate) {
+    //     console.log(`Adding task: "${taskText}" for date: ${selectedDate}`);
+    //     if (!tasks[selectedDate]) {
+    //       tasks[selectedDate] = [];
+    //     }
+    //     tasks[selectedDate].push(taskText);
+    //     localStorage.setItem('tasks', JSON.stringify(tasks));
+    //     displayTasks(selectedDate);
+    //     renderCalendar(currentMonth, currentYear);
+    //   } else {
+    //     console.log('Task text or selected date is missing');
+    //   }
+    // };
 
+    // Function to add a task
+  const addTask = (taskText, date) => {
+    if (taskText && date) {
+      console.log(`Adding task: "${taskText}" for date: ${date}`);
+      if (!tasks[date]) {
+        tasks[date] = [];
+      }
+      tasks[date].push(taskText);
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+      displayTasks(date);
+      renderCalendar(currentMonth, currentYear); // Re-render to update task indicators
+    } else {
+      console.log('Task text or date is missing');
+    }
+  };
+  
+    // Function to delete a task
+    const deleteTask = (date, index) => {
+      console.log(`Deleting task at index ${index} for date: ${date}`);
+      tasks[date].splice(index, 1);
+      if (tasks[date].length === 0) {
+        delete tasks[date];
+      }
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+      displayTasks(date);
+      renderCalendar(currentMonth, currentYear); // Re-render to update task indicators
+    };
+  
     // Event listeners for previous and next month buttons
     const addEventListeners = () => {
-        prevMonthButton.addEventListener("click", () => {
-            currentDate.setMonth(currentDate.getMonth() - 1);
-            renderCalendar();
-        });
-
-        nextMonthButton.addEventListener("click", () => {
-            currentDate.setMonth(currentDate.getMonth() + 1);
-            renderCalendar();
-        });
+      prevMonthButton.addEventListener('click', () => {
+        console.log('Previous month button clicked');
+        currentMonth--;
+        if (currentMonth < 0) {
+          currentMonth = 11;
+          currentYear--;
+        }
+        renderCalendar(currentMonth, currentYear);
+      });
+  
+      nextMonthButton.addEventListener('click', () => {
+        console.log('Next month button clicked');
+        currentMonth++;
+        if (currentMonth > 11) {
+          currentMonth = 0;
+          currentYear++;
+        }
+        renderCalendar(currentMonth, currentYear);
+      });
     };
-
+  
     // Public API
     return {
-        init: () => {
-            renderCalendar();
-            addEventListeners();
-        },
+      init: () => {
+        console.log('Initializing calendar');
+        addEventListeners();
+        renderCalendar(currentMonth, currentYear);
+      },
+      addTask, // Expose addTask for external use (if needed)
     };
 })();
-
+  
 // Initialize the calendar
 Calendar.init();
+
+// Manually add tasks for debugging
+Calendar.addTask('Promotional Banner', '2025-02-15');
+Calendar.addTask('Buy LED Strips', '2025-02-28');
+Calendar.addTask('Edit video for social media', '2025-03-01');
 
 // task modal functionality
 const TaskManager = (() => {
