@@ -1,12 +1,14 @@
 const Calendar = (() => {
     // Private variables
     let currentDate = new Date();
+    let selectedDate = null;
 
     // DOM elements
     const monthYear = document.getElementById("month-year");
     const calendarBody = document.getElementById("calendar-body");
     const prevMonthButton = document.getElementById("prev-month");
     const nextMonthButton = document.getElementById("next-month");
+    const toDoItems = document.querySelector(".to-do-items");
 
     // Factory function to create a calendar cell
     const createCell = (content, className = "") => {
@@ -58,8 +60,24 @@ const Calendar = (() => {
                         cell.classList.add("today");
                     }
 
+                    // Highlight selected date
+                    if (
+                        selectedDate &&
+                        day === selectedDate.getDate() &&
+                        currentDate.getMonth() === selectedDate.getMonth() &&
+                        currentDate.getFullYear() === selectedDate.getFullYear()
+                    ) {
+                        cell.classList.add("selected");
+                    }
+
+                    // Add event listener to the cell
+                    cell.addEventListener("click", () => {
+                        console.log(`Date clicked: ${day}`); // Debugging: Log the clicked date
+                        handleDateClick(day);
+                    });
+
                     row.appendChild(cell);
-                    day++;
+                    day++; // Increment day only when a valid day is added
                 }
             }
 
@@ -68,6 +86,57 @@ const Calendar = (() => {
             // Stop creating rows if all days are rendered
             if (day > totalDays) break;
         }
+    };
+
+    // Handle date click
+    const handleDateClick = (day) => {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        selectedDate = new Date(year, month, day);
+
+        console.log(`Selected Date: ${selectedDate}`); // Debugging: Log the selected date
+        renderTasksByDate(selectedDate);
+        renderCalendar(); // Re-render the calendar to update the selected date highlight
+    };
+
+    // Render tasks for the selected date
+    const renderTasksByDate = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        const formattedDate = `${year}-${month}-${day}`;
+
+        console.log(`Filtering tasks for date: ${formattedDate}`); // Debugging: Log the formatted date
+
+        // Example tasks (replace with your actual task list)
+        const tasks = [
+            { title: "Task 1", dateAdded: "2025-02-15" },
+            { title: "Task 2", dateAdded: "2025-02-28" },
+        ];
+
+        const filteredTasks = tasks.filter(task => {
+            const taskDate = new Date(task.dateAdded).toISOString().split("T")[0];
+            return taskDate === formattedDate;
+        });
+        console.log(`Filtered Tasks:`, filteredTasks); // Debugging: Log the filtered tasks
+
+        // Render tasks in the .to-do-items container
+        toDoItems.innerHTML = ""; // Clear the task list
+        filteredTasks.forEach(task => {
+            const taskItem = document.createElement("div");
+            taskItem.classList.add("item");
+
+            taskItem.innerHTML = `
+                <input type="checkbox" name="task" id="task-${task.title}">
+                <div class="item-folder">
+                    <p>${task.title}</p>
+                    <p>Personal <span>${formattedDate}</span></p>
+                </div>
+                <div class="starred">star</div>
+            `;
+
+            toDoItems.appendChild(taskItem);
+        });
     };
 
     // Event listeners for previous and next month buttons

@@ -428,6 +428,27 @@ td.today {
   margin-right: 15px;
 }
 
+/* Hover effect for calendar cells */
+#calendar td:hover {
+  background-color: #f0f0f0;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+/* Selected date style */
+#calendar td.selected {
+  background-color: #0a70ff;
+  color: white;
+  border-radius: 50%;
+}
+
+/* Today's date style */
+#calendar td.today {
+  background-color: #0a70ff;
+  color: white;
+  border-radius: 50%;
+}
+
 
 .task-section {
   display: flex;
