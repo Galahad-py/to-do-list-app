@@ -125,6 +125,7 @@ const TaskManager = (() => {
     const myDayFolder = document.querySelector(".folder[data-folder='my-day'] .folder-number");
     const allFolder = document.querySelector(".folder[data-folder='all'] .folder-number");
     const completedFolder = document.querySelector(".folder[data-folder='completed'] .folder-number");
+    const personalFolder = document.querySelector(".folder[data-folder='personal'] .folder-number");
 
     // Completed tasks section in the right sidebar
     const completedTasksItems = document.querySelector(".completed-tasks-items");
@@ -137,8 +138,8 @@ const TaskManager = (() => {
 
     // Function to check if a task is added today
     const isTaskAddedToday = (task) => {
-        const today = new Date().toDateString(); // Get today's date as a string
-        const taskDate = new Date(task.dateAdded).toDateString(); // Get task's date as a string
+        const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+        const taskDate = new Date(task.dateAdded).toISOString().split('T')[0]; // Get task's date in YYYY-MM-DD format
         return today === taskDate; // Compare the two dates
     };
 
@@ -155,56 +156,87 @@ const TaskManager = (() => {
         // Count completed tasks
         const completedCount = tasks.filter(task => task.completed).length;
         completedFolder.textContent = completedCount;
+
+        // Count tasks for "Personal"
+        const personalCount = tasks.filter(task => task.category === "Personal").length;
+        personalFolder.textContent = personalCount;
     };
 
     // Function to format the date
     const formatDate = (date) => {
-        const today = new Date().toDateString();
-        const taskDate = new Date(date).toDateString();
+        const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+        const taskDate = new Date(date).toISOString().split('T')[0]; // Get task's date in YYYY-MM-DD format
         return today === taskDate ? "Today" : new Date(date).toLocaleDateString();
     };
 
-    // Function to render tasks for a specific date
-    const renderTasksByDate = (date) => {
+    // Function to render tasks for a specific folder or tag
+    const renderTasks = (filter = "all") => {
         toDoItems.innerHTML = ""; // Clear the task list
-        const filteredTasks = tasks.filter(task => {
-            const taskDate = new Date(task.dateAdded).toDateString();
-            return taskDate === date.toDateString();
-        });
 
-        filteredTasks.forEach((task, index) => {
-            const taskElement = document.createElement("div");
-            taskElement.classList.add("item");
+        let filteredTasks = [];
 
-            taskElement.innerHTML = `
-                <input type="checkbox" name="task" id="task-${index}" ${task.completed ? "checked" : ""}>
-                <div class="item-folder">
-                    <p>${task.title}</p>
-                    <p>${task.description}</p>
-                    <p>${task.category} <span>${formatDate(task.dateAdded)}</span></p>
-                </div>
-                <div class="starred">star</div>
-            `;
+        switch (filter) {
+            case "my-day":
+                filteredTasks = tasks.filter(task => isTaskAddedToday(task));
+                break;
+            case "important":
+                filteredTasks = tasks.filter(task => task.category === "Important");
+                break;
+            case "personal":
+                filteredTasks = tasks.filter(task => task.category === "Personal");
+                break;
+            case "completed":
+                filteredTasks = tasks.filter(task => task.completed);
+                break;
+            case "all":
+                filteredTasks = tasks;
+                break;
+            default:
+                // Filter by custom tag
+                filteredTasks = tasks.filter(task => task.category === filter);
+                break;
+        }
 
-            // Add event listener to mark task as complete
-            const checkbox = taskElement.querySelector("input[type='checkbox']");
-            checkbox.addEventListener("change", () => {
-                task.completed = checkbox.checked; // Update the task's completed status
-                saveToLocalStorage(); // Save to localStorage
-                renderTasksByDate(date); // Re-render the task list
-                updateFolderCounts(); // Update folder counts
-                renderCompletedTasks(); // Update completed tasks in the right sidebar
+        if (filteredTasks.length > 0) {
+            // Sort tasks from most recent to oldest
+            filteredTasks.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+
+            // Render the filtered tasks
+            filteredTasks.forEach((task, index) => {
+                const taskElement = document.createElement("div");
+                taskElement.classList.add("item");
+
+                taskElement.innerHTML = `
+                    <input type="checkbox" name="task" id="task-${index}" ${task.completed ? "checked" : ""}>
+                    <div class="item-folder">
+                        <p>${task.title}</p>
+                        <p>${task.description}</p>
+                        <p>${task.category} <span>${formatDate(task.dateAdded)}</span></p>
+                    </div>
+                    <div class="starred">star</div>
+                `;
+
+                // Add event listener to mark task as complete
+                const checkbox = taskElement.querySelector("input[type='checkbox']");
+                checkbox.addEventListener("change", () => {
+                    task.completed = checkbox.checked; // Update the task's completed status
+                    saveToLocalStorage(); // Save to localStorage
+                    renderTasks(filter); // Re-render the task list
+                    updateFolderCounts(); // Update folder counts
+                    renderCompletedTasks(); // Update completed tasks in the right sidebar
+                });
+
+                // Add event listener to show task details
+                taskElement.addEventListener("click", () => {
+                    showTaskDetails(task, index);
+                });
+
+                toDoItems.appendChild(taskElement);
             });
-
-            // Add event listener to show task details
-            taskElement.addEventListener("click", () => {
-                showTaskDetails(task, index);
-            });
-
-            toDoItems.appendChild(taskElement);
-        });
-
-        updateFolderCounts(); // Update folder counts after rendering tasks
+        } else {
+            // Display "No Tasks Found" message
+            toDoItems.innerHTML = `<div class="no-results">No Tasks Found</div>`;
+        }
     };
 
     // Function to render completed tasks in the right sidebar
@@ -300,7 +332,8 @@ const TaskManager = (() => {
         deleteTaskBtn.onclick = () => {
             tasks.splice(index, 1); // Remove the task
             saveToLocalStorage(); // Save to localStorage
-            searchTasks(searchInput.value.trim()); // Re-render the search results
+            renderTasks(); // Re-render the task list
+            updateFolderCounts(); // Update folder counts
             taskDetailsModal.style.display = "none"; // Close the modal
         };
     };
@@ -373,7 +406,7 @@ const TaskManager = (() => {
             saveToLocalStorage();
 
             // Re-render tasks
-            searchTasks(searchInput.value.trim());
+            renderTasks();
             editModal.remove();
             taskDetailsModal.style.display = "none"; // Close the task details modal
         });
@@ -392,6 +425,11 @@ const TaskManager = (() => {
                 <div class="folder-number">1</div>
             `;
 
+            // Add event listener to filter tasks by tag
+            tagElement.addEventListener("click", () => {
+                renderTasks(tag); // Render tasks for the selected tag
+            });
+
             tagItems.appendChild(tagElement);
         });
     };
@@ -407,7 +445,8 @@ const TaskManager = (() => {
         };
         tasks.push(newTask); // Add the task to the array
         saveToLocalStorage(); // Save to localStorage
-        renderTasksByDate(new Date()); // Re-render the task list for today
+        renderTasks(); // Re-render the task list
+        updateFolderCounts(); // Update folder counts
     };
 
     // Function to add a new custom tag
@@ -416,6 +455,7 @@ const TaskManager = (() => {
             customTags.push(tagName); // Add the tag to the array
             saveToLocalStorage(); // Save to localStorage
             renderCustomTags(); // Re-render the custom tags section
+            updateFolderCounts(); // Update folder counts
         }
     };
 
@@ -495,9 +535,17 @@ const TaskManager = (() => {
                 if (query) {
                     searchTasks(query); // Perform search
                 } else {
-                    renderTasksByDate(new Date()); // Show tasks for today if search is empty
+                    renderTasks(); // Show all tasks if search is empty
                 }
             }
+        });
+
+        // Handle folder clicks
+        document.querySelectorAll(".folder").forEach(folder => {
+            folder.addEventListener("click", () => {
+                const folderType = folder.getAttribute("data-folder");
+                renderTasks(folderType); // Render tasks for the selected folder
+            });
         });
     };
 
@@ -505,9 +553,10 @@ const TaskManager = (() => {
     return {
         init: () => {
             initEventListeners(); // Set up event listeners
-            renderTasksByDate(new Date()); // Render tasks for today
+            renderTasks(); // Render all tasks initially
             renderCustomTags(); // Render initial custom tags (if any)
             renderCompletedTasks(); // Render completed tasks in the right sidebar
+            updateFolderCounts(); // Update folder counts initially
         },
     };
 })();
