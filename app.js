@@ -65,7 +65,9 @@ const Calendar = (() => {
     // Function to select a date
     const selectDate = (date) => {
         selectedDate = date;
-        displayTasks(date);
+        const formattedDate = new Date(date).toLocaleDateString(); // Format the date for display
+        toDoItems.innerHTML = `<div class="date-header">Showing Tasks for ${formattedDate}</div>`;
+        TaskManager.renderTasks("all", date); // Render tasks for the selected date
     };
 
     // Function to display tasks for a selected date
@@ -207,19 +209,26 @@ const TaskManager = (() => {
     // Function to format the date
     const formatDate = (date) => {
         const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
-        const taskDate = new Date(date).toISOString().split('T')[0]; // Get task's date in YYYY-MM-DD format
-        return today === taskDate ? "Today" : new Date(date).toLocaleDateString();
+        const taskDate = new Date(date).toISOString().split('T')[0]; // Convert input to YYYY-MM-DD format
+    
+        if (taskDate === today) {
+            return "Today"; // Return "Today" if the task was added today
+        } else {
+            return new Date(date).toLocaleDateString(); // Return the formatted date for past tasks
+        }
     };
 
     // Function to render tasks for a specific folder or tag
-    const renderTasks = (filter = "all") => {
+    const renderTasks = (filter = "all", selectedDate = null) => {
         toDoItems.innerHTML = ""; // Clear the task list
-
+    
         let filteredTasks = [];
-
+    
         switch (filter) {
             case "my-day":
-                filteredTasks = tasks.filter(task => isTaskAddedToday(task));
+                // Show tasks added today
+                const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+                filteredTasks = tasks.filter(task => task.date === today);
                 break;
             case "important":
                 filteredTasks = tasks.filter(task => task.category === "Important");
@@ -238,16 +247,21 @@ const TaskManager = (() => {
                 filteredTasks = tasks.filter(task => task.category === filter);
                 break;
         }
-
+    
+        // If a specific date is selected, filter tasks for that date
+        if (selectedDate) {
+            filteredTasks = tasks.filter(task => task.date === selectedDate);
+        }
+    
         if (filteredTasks.length > 0) {
             // Sort tasks from most recent to oldest
             filteredTasks.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
-
+    
             // Render the filtered tasks
             filteredTasks.forEach((task, index) => {
                 const taskElement = document.createElement("div");
                 taskElement.classList.add("item");
-
+    
                 taskElement.innerHTML = `
                     <input type="checkbox" name="task" id="task-${index}" ${task.completed ? "checked" : ""}>
                     <div class="item-folder">
@@ -257,27 +271,31 @@ const TaskManager = (() => {
                     </div>
                     <div class="starred">star</div>
                 `;
-
+    
                 // Add event listener to mark task as complete
                 const checkbox = taskElement.querySelector("input[type='checkbox']");
                 checkbox.addEventListener("change", () => {
                     task.completed = checkbox.checked; // Update the task's completed status
                     saveToLocalStorage(); // Save to localStorage
-                    renderTasks(filter); // Re-render the task list
+                    renderTasks(filter, selectedDate); // Re-render the task list
                     updateFolderCounts(); // Update folder counts
                     renderCompletedTasks(); // Update completed tasks in the right sidebar
                 });
-
+    
                 // Add event listener to show task details
                 taskElement.addEventListener("click", () => {
                     showTaskDetails(task, index);
                 });
-
+    
                 toDoItems.appendChild(taskElement);
             });
         } else {
             // Display "No Tasks Found" message
-            toDoItems.innerHTML = `<div class="no-results">No Tasks Found</div>`;
+            if (selectedDate) {
+                toDoItems.innerHTML = `<div class="no-results">No tasks found for ${selectedDate}</div>`;
+            } else {
+                toDoItems.innerHTML = `<div class="no-results">No Tasks Found</div>`;
+            }
         }
     };
 
@@ -477,21 +495,22 @@ const TaskManager = (() => {
     };
 
     // Function to add a new task
-    const addTask = (title, description, category, date) => {
+    const addTask = (title, description, category) => {
         const newTask = {
             title,
             description,
             category,
-            dateAdded: new Date(), // Add the current date and time
-            date,
-            completed: false, // Default to not completed
+            dateAdded: new Date().toISOString().split('T')[0], // Task creation date (YYYY-MM-DD)
+            date: new Date().toISOString().split('T')[0], // Task due date (same as creation date)
+            completed: false,
         };
         tasks.push(newTask); // Add the task to the array
         saveToLocalStorage(); // Save to localStorage
         renderTasks(); // Re-render the task list
         updateFolderCounts(); // Update folder counts
-
-        Calendar.addTask(title, date);
+    
+        // Sync the task with the calendar
+        Calendar.addTask(title, newTask.date);
     };
 
     // Function to add a new custom tag
@@ -506,35 +525,34 @@ const TaskManager = (() => {
 
     // Function to handle form submission
     const handleFormSubmit = (event) => {
-        event.preventDefault(); // Prevent form from submitting
-
+        event.preventDefault();
+    
         // Get input values
         const taskTitle = document.getElementById("task-title").value;
         const taskDescription = document.getElementById("task-description").value;
         const selectedCategory = taskCategory.value;
-        const taskDate = document.getElementById("task-date").value;
-
+    
         let taskCategoryValue = selectedCategory;
-
+    
         // Handle custom tag creation
         if (selectedCategory === "custom") {
             const customTagName = customTagInput.value.trim();
             if (customTagName) {
                 taskCategoryValue = customTagName;
-                addCustomTag(customTagName); // Add the custom tag
+                addCustomTag(customTagName);
             } else {
                 alert("Please enter a valid tag name.");
                 return;
             }
         }
-
+    
         // Add the new task
-        addTask(taskTitle, taskDescription, taskCategoryValue, taskDate);
-
+        addTask(taskTitle, taskDescription, taskCategoryValue);
+    
         // Clear the form and close the modal
         taskForm.reset();
         taskModal.style.display = "none";
-        customTagInput.style.display = "none"; // Hide custom tag input
+        customTagInput.style.display = "none";
     };
 
     // Function to handle category selection change
@@ -590,7 +608,11 @@ const TaskManager = (() => {
         document.querySelectorAll(".folder").forEach(folder => {
             folder.addEventListener("click", () => {
                 const folderType = folder.getAttribute("data-folder");
-                renderTasks(folderType); // Render tasks for the selected folder
+                if (folderType === "my-day") {
+                    renderTasks("my-day"); // Render tasks for today
+                } else {
+                    renderTasks(folderType); // Render tasks for other folders
+                }
             });
         });
     };
@@ -604,10 +626,12 @@ const TaskManager = (() => {
             renderCompletedTasks(); // Render completed tasks in the right sidebar
             updateFolderCounts(); // Update folder counts initially
         },
+        renderTasks, 
     };
 })();
 
-// Initialize the calendar
-Calendar.init();
 // Initialize the TaskManager
 TaskManager.init();
+
+// Initialize the calendar
+Calendar.init();
