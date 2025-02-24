@@ -11,9 +11,26 @@ const Calendar = (() => {
     const prevMonthButton = document.getElementById('prev-month');
     const nextMonthButton = document.getElementById('next-month');
     const toDoItems = document.querySelector('.to-do-items');
+    const currentDateElement = document.getElementById('current-date'); // Reference to the .folder-nav p element
 
     // Load tasks from localStorage
     let tasks = JSON.parse(localStorage.getItem('tasks')) || {};
+
+    // Function to format the date as "Month Year"
+    const formatDateDisplay = (date) => {
+        const monthNames = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+        const month = monthNames[date.getMonth()];
+        const year = date.getFullYear();
+        return `${month} ${year}`;
+    };
+
+    // Function to update the .folder-nav p element
+    const updateCurrentDateDisplay = (date) => {
+        currentDateElement.textContent = formatDateDisplay(date);
+    };
 
     // Function to render the calendar
     const renderCalendar = (month, year) => {
@@ -68,6 +85,10 @@ const Calendar = (() => {
         const formattedDate = new Date(date).toLocaleDateString(); // Format the date for display
 
         console.log(`Selected date: ${date}, formatted date: ${formattedDate}`); // Debug log
+
+        // Update the .folder-nav p element with the selected date
+        updateCurrentDateDisplay(new Date(date));
+
         toDoItems.innerHTML = `<div class="date-header">Showing Tasks for ${formattedDate}</div>`;
         TaskManager.renderTasks("all", date); // Render tasks for the selected date
     };
@@ -134,6 +155,9 @@ const Calendar = (() => {
     // Public API
     return {
         init: () => {
+            // Initialize the .folder-nav p element with the current date
+            updateCurrentDateDisplay(currentDate);
+
             addEventListeners();
             renderCalendar(currentMonth, currentYear);
         },
@@ -483,21 +507,23 @@ const TaskManager = (() => {
     // Function to render custom tags
     const renderCustomTags = () => {
         tagItems.innerHTML = ""; // Clear the custom tags section
+    
+        // Render only user-added tags
         customTags.forEach((tag, index) => {
             const tagElement = document.createElement("div");
             tagElement.classList.add("tag");
-
+    
             tagElement.innerHTML = `
                 <img src="" alt="${tag}">
                 <p>${tag}</p>
                 <div class="folder-number">1</div>
             `;
-
+    
             // Add event listener to filter tasks by tag
             tagElement.addEventListener("click", () => {
                 renderTasks(tag); // Render tasks for the selected tag
             });
-
+    
             tagItems.appendChild(tagElement);
         });
     };
@@ -542,7 +568,7 @@ const TaskManager = (() => {
         const taskTitle = document.getElementById("task-title").value;
         const taskDescription = document.getElementById("task-description").value;
         const selectedCategory = taskCategory.value;
-
+    
         console.log("Form submitted with values:", { taskTitle, taskDescription, selectedCategory }); // Debug log
     
         let taskCategoryValue = selectedCategory;
@@ -633,6 +659,11 @@ const TaskManager = (() => {
     // Public API
     return {
         init: () => {
+            localStorage.removeItem("customTags");
+
+            // Initialize customTags as an empty array
+            customTags = [];
+
             initEventListeners(); // Set up event listeners
             renderTasks(); // Render all tasks initially
             renderCustomTags(); // Render initial custom tags (if any)
