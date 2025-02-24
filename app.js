@@ -66,6 +66,8 @@ const Calendar = (() => {
     const selectDate = (date) => {
         selectedDate = date;
         const formattedDate = new Date(date).toLocaleDateString(); // Format the date for display
+
+        console.log(`Selected date: ${date}, formatted date: ${formattedDate}`); // Debug log
         toDoItems.innerHTML = `<div class="date-header">Showing Tasks for ${formattedDate}</div>`;
         TaskManager.renderTasks("all", date); // Render tasks for the selected date
     };
@@ -210,6 +212,8 @@ const TaskManager = (() => {
     const formatDate = (date) => {
         const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
         const taskDate = new Date(date).toISOString().split('T')[0]; // Convert input to YYYY-MM-DD format
+
+        console.log(`Formatting date: ${date}, taskDate: ${taskDate}, today: ${today}`); // Debug log
     
         if (taskDate === today) {
             return "Today"; // Return "Today" if the task was added today
@@ -221,6 +225,8 @@ const TaskManager = (() => {
     // Function to render tasks for a specific folder or tag
     const renderTasks = (filter = "all", selectedDate = null) => {
         toDoItems.innerHTML = ""; // Clear the task list
+
+        console.log(`Rendering tasks for filter: ${filter}, selectedDate: ${selectedDate}`); // Debug log
     
         let filteredTasks = [];
     
@@ -250,8 +256,10 @@ const TaskManager = (() => {
     
         // If a specific date is selected, filter tasks for that date
         if (selectedDate) {
+            console.log(`Filtering tasks for selected date: ${selectedDate}`); // Debug log
             filteredTasks = tasks.filter(task => task.date === selectedDate);
         }
+        console.log("Filtered tasks:", filteredTasks); // Debug log
     
         if (filteredTasks.length > 0) {
             // Sort tasks from most recent to oldest
@@ -504,6 +512,9 @@ const TaskManager = (() => {
             date: new Date().toISOString().split('T')[0], // Task due date (same as creation date)
             completed: false,
         };
+
+        console.log("Adding new task:", newTask); // Debug log
+
         tasks.push(newTask); // Add the task to the array
         saveToLocalStorage(); // Save to localStorage
         renderTasks(); // Re-render the task list
@@ -531,6 +542,8 @@ const TaskManager = (() => {
         const taskTitle = document.getElementById("task-title").value;
         const taskDescription = document.getElementById("task-description").value;
         const selectedCategory = taskCategory.value;
+
+        console.log("Form submitted with values:", { taskTitle, taskDescription, selectedCategory }); // Debug log
     
         let taskCategoryValue = selectedCategory;
     
